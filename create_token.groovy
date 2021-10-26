@@ -2,19 +2,53 @@ import com.bettercloud.vault.Vault
 import com.bettercloud.vault.VaultConfig
 import com.bettercloud.vault.response.LogicalResponse
 
-private static void create_token(VAULT_ADDR, VAULT_TOKEN) {
 
-    final VaultConfig config = new VaultConfig()
-            .address(VAULT_ADDR)                            // Defaults to "VAULT_ADDR" environment variable
-            .token(VAULT_TOKEN)                             // Defaults to "VAULT_TOKEN" environment variable
-            .readTimeout(5)                                 // Defaults to "VAULT_READ_TIMEOUT" environment variable
-            .build()
+private static void create_token() {
+    final Vault vault = container.getRootVault();
 
-    final Vault vault = new Vault(config)
-    notify(VAULT_TOKEN)
+    final AuthResponse = vault.auth().createToken(
+        new Auth.TokenRequest()
+            .id(UUID.randomUUID())
+            .polices(Arrays.asList("policy"))
+            .noParent(true)
+            .noDefaultPolicy(false)
+            .ttl("1h")
+            .displayName("display name")
+            .numUses(1L)
+            .renewable(true)
+            .type("service")
+            .explicitMaxTtl("5h")
+            .period("2h")
+            .entityAlias("entityId")
+        );
+
+    final String token = response.getAuthClientToken();
+    final String accessor = response.getTokenAccessor();
+
+    assertNotNull(accessor);
+    assertNotNull(token);
+    assertEquals(2, response.getAuthPolicies().size());
+    assertEquals("default", response.getAuthPolicies().get(0));
+    assertEquals("policy", response.getAuthPolicies().get(1));
+    assertEquals(7200, response.getAuthLeaseDuration());
+
+    notify(token)
 }
 
-def notify(VAULT_TOKEN) {
+def notify(token) {
     // send teams notification
-    office365ConnectorSend message: "Token: #${VAULT_TOKEN}", webhookUrl: EMAIL_TEAMS
+    office365ConnectorSend message: "Token: ${token}", webhookUrl: EMAIL_TEAMS
 }
+
+
+/* email notification
+pipeline {
+    agent any
+    post {
+        success {
+            mail to: 'name@example.com',
+                subject: "Vault token",
+                body: "Token - $token"
+        }
+    }
+} */
