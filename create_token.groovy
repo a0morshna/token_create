@@ -35,6 +35,17 @@ private static void create_token() {
     notify(token)
 }
 
+
+private static void setToken(token){
+    VaultConfig vaultConfig = new VaultConfig()
+            .sslConfig(new SslConfig().verify(false).build())
+            .address(System.getenv('VAULT_ADDRESS').trim())
+            .token(token)
+            .build()
+    final Vault vault = new Vault(vaultConfig)
+}
+
+
 def notify(token) {
     // send teams notification
     office365ConnectorSend message: "Token: ${token}", webhookUrl: EMAIL_TEAMS
